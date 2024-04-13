@@ -1,64 +1,57 @@
 <template>
-    <v-toolbar floating rounded>
-        <v-icon>mdi-magnify</v-icon>
-        <v-autocomplete 
-            v-model="selectedLibrary" 
-            :items="filteredItems" 
-            label="Search for Libraries"
-            item-text="displayText"
-            item-value="library" 
-            :search-input.sync="updateSearchInput"
-            @change="searchLibrary"
-            :auto-select-first="true"
-            :clearable="true"
-            background-color="white"
-            color="#4E4A99"
-        ></v-autocomplete>
-<!--         <v-btn icon>
-            <v-icon @click="resetMap">mdi-home</v-icon>
-        </v-btn> -->
-    </v-toolbar>
+        <div class="search-div">
+            <!-- <v-toolbar floating rounded background-color="white"> -->
+                <v-autocomplete
+                    prepend-icon="mdi-magnify"
+                    v-model="selectedLibrary" 
+                    :items="filteredItems"
+                    label="Search"
+                    item-text="displayText"
+                    item-value="library"
+                    :search-input.sync="updateSearchInput"
+                    @change="searchLibrary"
+                    :auto-select-first="true"
+                    :clearable="true"
+
+                    color="#4E4A99"
+                    background-color="white"
+                ></v-autocomplete>
+            <!-- </v-toolbar> -->
+        </div>
 </template>
   
 <script>
-import jsonData from '@/assets/data.json';
-
 export default {
-    data() {
-        return {
-            items: jsonData.map(library => ({
-                library,
-                displayText: `${library.name}, ${library.city}, ${library.library_code}`
-            })),
-            selectedLibrary: null,
-            search: '',
-        };
-    },
+    name: 'SearchBar',
     props: {
-        searchInput: {
-            type: String,
-            default: '',
-        },
         libraries: {
             type: Array,
             default: () => [],
         },
+        searchInput: {
+            type: String,
+            default: '',
+        },
+    },
+    data() {
+        return {
+            items: [],
+            selectedLibrary: null,
+            search: '',
+        };
     },
     computed: {
-        // This is the computed property that will filter the items based on the search query
         filteredItems() {
-            if (!this.search) return this.items;
-            const lowerCaseSearch = this.search.toLowerCase();
-            return this.items.filter(item => {
-                return (
-                    item.library.name.toLowerCase().includes(lowerCaseSearch) ||
-                    item.library.library_code.toLowerCase().includes(lowerCaseSearch) ||
-                    item.library.street.toLowerCase().includes(lowerCaseSearch) ||
-                    item.library.postal_code.toLowerCase().includes(lowerCaseSearch) ||
-                    item.library.city.toLowerCase().includes(lowerCaseSearch)
-                    );
-            });
+            if (!this.libraries || this.libraries.length === 0) {
+                return [];
+            }
+            var items = this.libraries.map(library => ({
+                library,
+                displayText: `${library.name} [${library.library_code}], ${library.city}`
+            }));
+            return items;
         },
+        // This is the computed property that will filter the items based on the search query
         updateSearchInput: {
             get() {
                 // Read the value of the computed property
@@ -71,7 +64,7 @@ export default {
                 // Catch the case, if there is no library (null), so no error is displayed in the console
                 this.search = value;
             },
-        }
+        },
     },
     methods: {
         searchLibrary() {
@@ -87,10 +80,17 @@ export default {
 </script>
   
 <style>
+.search-div {
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
 .v-toolbar {
     position: absolute;
-    top: 25px;
-    left: 50px;
+    top: 0px;
+    left: 0px;
     z-index: 1000;
 }
 
