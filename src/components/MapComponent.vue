@@ -9,7 +9,7 @@
                 <l-geo-json v-show="show" :geojson="geojson" :options-style="styleFunction" />
                 <vue2-leaflet-marker-cluster ref="myCluster" :options="clusterOptions">
                     <l-marker v-for="library in libraries" :key=library.id :id="`mark-${library.id}`" ref="mapMarkers"
-                        :lat-lng="[library.latitude, library.longitude]" rise-on-hover:true :icon="icon">
+                        :lat-lng="[library.latitude, library.longitude]" rise-on-hover:true :icon="icon" @click="clickMarker(library.library_code)">
                         <l-tooltip v-show="showNames" :options="{ permanent: false, interactive: true }">
                             {{ library.name }}
                         </l-tooltip>
@@ -72,12 +72,20 @@
                                     <br>
                                     <span style="margin-left: 20px;">Digitization Requests</span>
                                 </template>
+                                <br>
                                 <template v-if="library.website">
                                     <br>
                                     <b>Website:</b>
                                     <br>
                                     <a :href="library.website" target="_blank" class="cropped-link">{{ library.website
                                         }}</a>
+                                </template>
+                                <br>
+                                <template v-if="library.notes">
+                                    <br>
+                                    <b>Additional Notes:</b>
+                                    <br>
+                                    {{ library.notes }}
                                 </template>
                             </div>
                         </l-popup>
@@ -222,7 +230,7 @@ export default {
 
             // turn the libraries into a json array without the libraries that have no coordinates
             this.libraries = (await resp.json()).data.filter(l => l.latitude !== null && l.longitude !== null);
-
+            this.handleQueryParams();
         } catch (error) {
             console.log(
                 "Error fetching and parsing data"
@@ -233,10 +241,13 @@ export default {
         searchLibrary (searchResult) {
             this.selectedLibrary = searchResult;
             this.$refs.map.mapObject.flyToBounds([[searchResult.latitude, searchResult.longitude]]);
-            const markerToOpen = this.$refs.mapMarkers.find(m => {
-                return m.$el.id === `mark-${searchResult.id}`;
+            this.$nextTick().then(() => {
+                const markerToOpen = this.$refs.mapMarkers.find(m => {
+                    m.$el.id === `mark-${searchResult.id}`;
+                    return m.$el.id === `mark-${searchResult.id}`;
+                });
+                this.zoomMarker = markerToOpen.mapObject;
             });
-            this.zoomMarker = markerToOpen.mapObject;
         },
         showZoomedPopup() {
             this.currentZoomLevel = this.$refs.map.mapObject.getZoom();
@@ -247,9 +258,38 @@ export default {
                 });
             }
         },
+        clickMarker(id) {
+            this.changeQueryParams(id)
+        },
         clickOutsideMarkers() {
             this.selectedLibrary = "";
         },
+        handleQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const library = params.get('library');
+            this.selectedLibrary = this.libraries.find(l => l.library_code === library);
+            try {
+                this.searchLibrary(this.selectedLibrary);
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        changeQueryParams(id) {
+            const params = new URLSearchParams();
+            params.set('library', id);
+
+            // Check if the library query parameter already exists
+            const existingLibraryParam = params.get('library');
+
+            // If it doesn't exist, append it to the URL
+            if (!existingLibraryParam) {
+                window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+            } else {
+                // If it exists, simply replace the existing query parameter
+                window.history.replaceState({}, '', `?${params}`);
+            }
+            window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+        }
     }
 };
 </script>
