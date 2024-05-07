@@ -85,7 +85,8 @@
                                     <br>
                                     <b>Additional Notes:</b>
                                     <br>
-                                    {{ library.notes }}
+                                    <t class="add-notes" v-html="library.notes" />
+                                    <br>
                                 </template>
                             </div>
                         </l-popup>
@@ -267,6 +268,9 @@ export default {
         handleQueryParams() {
             const params = new URLSearchParams(window.location.search);
             const library = params.get('library');
+            if (!library) {
+                return;
+            }
             this.selectedLibrary = this.libraries.find(l => l.library_code === library);
             try {
                 this.searchLibrary(this.selectedLibrary);
@@ -288,8 +292,7 @@ export default {
                 // If it exists, simply replace the existing query parameter
                 window.history.replaceState({}, '', `?${params}`);
             }
-            window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
-        }
+        },
     }
 };
 </script>
@@ -305,6 +308,10 @@ export default {
     height: 100wh;
     width: 100vw;
     filter: grayscale(0%);
+}
+
+.add-notes {
+    white-space: pre-wrap;
 }
 
 .search {
