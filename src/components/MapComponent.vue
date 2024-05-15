@@ -106,14 +106,7 @@ import { icon, DivIcon, Point } from "leaflet";
 import { LMap, LTileLayer, LMarker, LGeoJson, LPopup, LControlZoom, LTooltip } from "vue2-leaflet";
 import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
 import SearchBar from "./SearchBar.vue";
-/*
-delete Icon.Default.prototype._getIconUrl;
-Icon.Default.mergeOptions({
-    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-    iconUrl: require('leaflet/dist/images/marker-icon.png'),
-    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
-});
-*/
+
 export default {
     name: "MapComponent",
     components: {
@@ -150,15 +143,12 @@ export default {
             selectedLibrary: null,
             fillColor: "#4485CA",
             url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            //url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
             attribution:
                 '&copy; Map data from <a href="http://osm.org/copyright">OpenStreetMap</a> contributors, ',
 
             clusterOptions: {
                 maxClusterRadius: 40,
                 animate: false,
-                // Create our custom cluster icon replacement with the `iconCreateFunction` api
-                // See: https://github.com/Leaflet/Leaflet.markercluster#customising-the-clustered-markers
                 iconCreateFunction: cluster => {
                     var childCount = cluster.getChildCount();
                     var sizeConstant = 5;
@@ -249,6 +239,7 @@ export default {
                 });
                 this.zoomMarker = markerToOpen.mapObject;
             });
+            this.changeQueryParams(searchResult.library_code);
         },
         showZoomedPopup() {
             this.currentZoomLevel = this.$refs.map.mapObject.getZoom();

@@ -1,6 +1,5 @@
 <template>
         <div class="search-div">
-            <!-- <v-toolbar floating rounded background-color="white"> -->
                 <v-autocomplete
                     prepend-icon="mdi-magnify"
                     v-model="selectedLibrary" 
@@ -16,7 +15,6 @@
                     color="#4E4A99"
                     background-color="white"
                 ></v-autocomplete>
-            <!-- </v-toolbar> -->
         </div>
 </template>
   
