@@ -1,26 +1,28 @@
 <template>
         <div class="search-div">
-            <v-autocomplete
+            <v-combobox
+                ref="combobox"
                 prepend-icon="mdi-magnify"
                 v-model="selectedLibrary"
-                :items="filteredItems"
-                item-text="displayText"
+                :items="this.libraries"
+                :item-text="library => `${library.name}`"
                 label="Search"
                 item-value="library"
                 :search-input.sync="updateSearchInput"
                 @change="searchLibrary"
                 @update:search-input="onInputChange"
+                @keydown.enter="handleKeydown"
                 :auto-select-first="false"
                 :clearable="true"
                 color="#4E4A99"
                 background-color="white"
-            ></v-autocomplete>
+            ></v-combobox>
         </div>
 </template>
   
 <script>
 export default {
-    name: 'SearchBar',
+    name: 'SearchBar2',
     props: {
         libraries: {
             type: Array,
@@ -35,26 +37,9 @@ export default {
         return {
             items: [],
             selectedLibrary: null,
-            search: '',
         };
     },
     computed: {
-        filteredItems() {
-            if (!this.libraries || this.libraries.length === 0) {
-                return [];
-            }
-            var items = this.libraries.map(library => ({
-                library,
-                displayText: `${library.name} [${library.library_code}], ${library.city}`
-            }));
-            return items;
-        },
-        customItems() {
-            return this.items.map(item => ({
-                text: item.name,
-                value: item.id,
-            }));
-        },
         // This is the computed property that will filter the items based on the search query
         updateSearchInput: {
             // get() {
@@ -66,22 +51,32 @@ export default {
             // },
             set(value) {
                 // Catch the case, if there is no library (null), so no error is displayed in the console
-                this.search = value;
+                console.log("Updating search input: ", value);
+                return this.search = value;
+            },
+            get() {
+                return this.search;
             },
         },
     },
     methods: {
         searchLibrary() {
+            if (this.selectedLibrary == null || this.selectedLibrary === "") {
+                this.$emit('search-change', '');
+            }
             if (this.selectedLibrary != null) {
                 console.log("Selected Library: ", this.selectedLibrary);
                 this.$emit('search-library', this.selectedLibrary);
             }
         },
-        resetMap() {
-            this.$emit('search-reset', null);
-        },
         onInputChange() {
             this.$emit('search-change', this.search);
+        },
+        handleKeydown() {
+            if (this.libraries.includes(this.selectedLibrary && !this.search)) {
+                this.$emit('search-change', this.search);
+                this.$refs.combobox.blur();
+            }
         },
     },
 };

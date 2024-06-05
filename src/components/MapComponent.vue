@@ -9,7 +9,8 @@
                 <l-geo-json v-show="show" :geojson="geojson" :options-style="styleFunction" />
                 <vue2-leaflet-marker-cluster ref="myCluster" :options="clusterOptions">
                     <l-marker v-for="library in libraries" :key=library.id :id="`mark-${library.id}`" ref="mapMarkers"
-                        :lat-lng="[library.latitude, library.longitude]" rise-on-hover:true :icon="icon" @click="clickMarker(library.library_code)">
+                        :lat-lng="[library.latitude, library.longitude]" rise-on-hover:true :icon="icon"
+                        @click="clickMarker(library.library_code)">
                         <l-tooltip v-show="showNames" :options="{ permanent: false, interactive: true }">
                             {{ library.name }}
                         </l-tooltip>
@@ -96,7 +97,8 @@
         </div>
 
         <div class="search">
-            <search-bar :libraries="this.libraries" @search-library="searchLibrary" :search-input="searchText" />
+            <search-bar-2 :libraries.sync="this.libraries" @search-library="searchLibrary" @search-change="searchChange"
+                :search-input="searchText" />
         </div>
     </div>
 </template>
@@ -105,7 +107,7 @@
 import { icon, DivIcon, Point } from "leaflet";
 import { LMap, LTileLayer, LMarker, LGeoJson, LPopup, LControlZoom, LTooltip } from "vue2-leaflet";
 import Vue2LeafletMarkerCluster from 'vue2-leaflet-markercluster'
-import SearchBar from "./SearchBar.vue";
+import SearchBar2 from "./SearchBar2.vue";
 
 export default {
     name: "MapComponent",
@@ -118,7 +120,7 @@ export default {
         LPopup,
         LTooltip,
         Vue2LeafletMarkerCluster,
-        SearchBar,
+        SearchBar2,
     },
     data() {
         return {
@@ -223,13 +225,14 @@ export default {
             this.libraries = (await resp.json()).data.filter(l => l.latitude !== null && l.longitude !== null);
             this.handleQueryParams();
         } catch (error) {
+            console.log(process.env.VUE_APP_DIRECTORIES_BASE_URL + "api/v1/libraries");
             console.log(
                 "Error fetching and parsing data"
             );
         }
     },
     methods: {
-        searchLibrary (searchResult) {
+        searchLibrary(searchResult) {
             this.selectedLibrary = searchResult;
             this.$refs.map.mapObject.flyToBounds([[searchResult.latitude, searchResult.longitude]]);
             this.$nextTick().then(() => {
@@ -255,6 +258,7 @@ export default {
         },
         clickOutsideMarkers() {
             this.selectedLibrary = "";
+            this.changeQueryParams("");
         },
         handleQueryParams() {
             const params = new URLSearchParams(window.location.search);
@@ -282,6 +286,48 @@ export default {
             } else {
                 // If it exists, simply replace the existing query parameter
                 window.history.replaceState({}, '', `?${params}`);
+            }
+        },
+        searchChange(search) {
+            this.updateLibraries(search);
+            console.log("Search Change: ", search);
+        },
+        async updateLibraries(query) {
+            if (query === "") {
+                console.log("empty");
+                try {
+                    const resp = await fetch(
+                        process.env.VUE_APP_DIRECTORIES_BASE_URL + "api/v1/libraries",
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Authentication': process.env.VUE_APP_DIRECTORIES_API_KEY
+                            }
+                        });
+                    //return resp;
+                    // turn the libraries into a json array without the libraries that have no coordinates
+                    this.libraries = (await resp.json()).data.filter(l => l.latitude !== null && l.longitude !== null);
+                } catch (error) {
+                    console.log("Error fetching and parsing data");
+                }
+            } else {
+                try {
+                    const resp = await fetch(
+                        process.env.VUE_APP_DIRECTORIES_BASE_URL + "api/v1/libraries?search=" + query,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Authentication': process.env.VUE_APP_DIRECTORIES_API_KEY
+                            },
+                        });
+                    //return resp;
+                    // turn the libraries into a json array without the libraries that have no coordinates
+                    this.libraries = (await resp.json()).data.filter(l => l.latitude !== null && l.longitude !== null);
+                } catch (error) {
+                    console.log("Error fetching and parsing data");
+                }
             }
         },
     }
