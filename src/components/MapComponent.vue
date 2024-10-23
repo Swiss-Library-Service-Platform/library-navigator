@@ -367,5 +367,7 @@ export default {
     font-size: 1.2em;
     font-weight: bold;
     color: white;
+    width: 100%;      /* Stellt sicher, dass der Inhalt die volle Breite des Icons verwendet */
+    height: 100%;  
 }
 </style>
