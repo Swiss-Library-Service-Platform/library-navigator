@@ -225,7 +225,7 @@ export default {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'Authentication': process.env.VUE_APP_DIRECTORIES_API_KEY
+                        'Authorization': `Bearer ${process.env.VUE_APP_DIRECTORIES_API_KEY}`
                     }
                 });
 
